@@ -59,6 +59,26 @@ const defaultColor = 'rgba(0, 0, 0, 0.3)'; // Default color for inactive buttons
 
 let activeButton = null; // Store the currently active button
 
+const hotspotFolders = {}; // Store GUI folders for each view
+
+function updateHotspotGUI(viewName) {
+    // Remove existing folder if it exists (I am already removing the previous folders in the disableHotspot function,here it is just in case in the future if we call the updateHotspotGUI function without calling the disableHotspot func. or before that function).
+    if (hotspotFolders[viewName]) {
+        hotspotFolders[viewName].destroy();
+        delete hotspotFolders[viewName]; 
+    }
+
+    // Create a new folder
+    const folder = gui.addFolder(`${viewName} Hotspots`);
+    hotspotFolders[viewName] = folder;
+
+    hotspots[viewName].forEach((hotspot, index) => {
+        folder.add({ zoom: () => zoomToHotspot(hotspot) }, 'zoom').name(`Hotspot ${index + 1}`);
+    });
+
+    folder.open();
+}
+
 function highlightButton(controller) {
     if (activeButton) {
         activeButton.domElement.style.backgroundColor = defaultColor;
@@ -115,10 +135,17 @@ function enableHotspots(viewName) {
             });
         }
     });
+    updateHotspotGUI(viewName);
 }
 
 // Function to disable hotspots for a particular view
 function disableHotspots(viewName) {
+
+    if (hotspotFolders[viewName]) {
+        hotspotFolders[viewName].destroy();
+        delete hotspotFolders[viewName];
+    }
+
     hotspots[viewName].forEach((hotspot) => {
         // Traverse through the model and remove the specific hotspot
         model.traverse((child) => {
